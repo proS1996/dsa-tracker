@@ -1,5 +1,6 @@
-const CACHE = "dsa-tracker-v4";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "dsa-tracker-v5";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
+  "./apple-touch-icon.png", "./apple-touch-icon-152.png", "./apple-touch-icon-167.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
