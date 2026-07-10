@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1117">
+<title>DSA Tracker — 90-Day Plan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+:root{
+  --bg-root:#0A0A0A;--bg-surface:#0F1117;--bg-card:#1A1D27;--border:#2A2D3A;
+  --accent:#00E599;--accent-hover:#00B87A;--amber:#F59E0B;
+  --text-primary:#FFF;--text-body:#D1D5DB;--text-muted:#9CA3AF;--text-faint:#64748B;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg-root);color:var(--text-body);font-family:'Inter',-apple-system,sans-serif;padding-bottom:48px;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace}
+header{padding:calc(24px + env(safe-area-inset-top)) 20px 8px;background:radial-gradient(ellipse at top left,rgba(0,229,153,.08),transparent 60%),var(--bg-surface)}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:9999px;font:600 11px/1 'Inter';letter-spacing:.04em;text-transform:uppercase;background:rgba(0,229,153,.1);color:var(--accent);border:1px solid rgba(0,229,153,.3)}
+h1{margin:10px 0 0;font-size:28px;font-weight:700;letter-spacing:-.01em;color:var(--text-primary);display:inline}
+.header-row{display:flex;align-items:baseline;justify-content:space-between;margin-top:10px}
+.streak{display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px}
+main{padding:16px 20px 0;max-width:480px;margin:0 auto}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px}
+.today-card{padding:24px}
+.day-num{font-size:44px;font-weight:700;color:var(--text-primary);line-height:1}
+.day-total{font-size:18px;color:var(--text-faint);font-weight:400}
+.week-topic{margin-top:10px;font-size:15px;font-weight:600;color:var(--accent)}
+.week-detail{margin-top:4px;font-size:13px;color:var(--text-muted)}
+.section-label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;color:var(--text-faint)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.check-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;border-radius:8px;font:600 14px/1 'Inter';cursor:pointer;transition:transform 150ms cubic-bezier(.34,1.56,.64,1),background 200ms,border-color 200ms,color 200ms;background:transparent;border:1.5px solid var(--border);color:var(--text-muted);flex:1}
+.check-btn:active{transform:scale(.96)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{padding:14px 8px;text-align:center}
+.stat .n{font-size:22px;font-weight:700;color:var(--accent)}
+.stat .l{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-top:2px}
+.pbar-wrap{height:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;overflow:hidden}
+.pbar{height:100%;background:var(--accent);border-radius:9999px;transition:width .5s cubic-bezier(0,0,.2,1)}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.cell{aspect-ratio:1;border-radius:6px;background:transparent;border:1.5px solid var(--border);padding:0;transition:transform 150ms;cursor:pointer}
+.cell:not(:disabled):active{transform:scale(.85)}
+.cell:disabled{opacity:.25;cursor:default}
+.cell.today{border-color:var(--accent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,229,153,.5)}50%{box-shadow:0 0 0 5px rgba(0,229,153,0)}}
+.legend{display:flex;gap:14px;margin-top:12px;font-size:11px;color:var(--text-faint);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+.sheet{background:var(--bg-surface);border:1px solid var(--border);border-bottom:none;border-radius:16px 16px 0 0;padding:24px 20px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(0,0,.2,1)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ghost-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:8px;font-family:'Inter'}
+.primary-btn{background:var(--accent);color:#0A0A0A;border:none;padding:12px 24px;border-radius:6px;font:600 15px/1 'Inter';letter-spacing:.01em;cursor:pointer;transition:background .2s,transform .15s}
+.primary-btn:active{transform:translateY(0)}
+.secondary-btn{background:transparent;color:var(--text-primary);border:1.5px solid var(--border);padding:12px 24px;border-radius:6px;font:500 15px/1 'Inter';cursor:pointer;transition:border-color .2s,color .2s}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid rgba(0,229,153,.4);color:var(--text-primary);padding:12px 20px;border-radius:8px;font-size:14px;z-index:200;animation:fadeIn .2s;box-shadow:0 8px 24px rgba(0,229,153,.25)}
+.install-banner{margin-top:16px;padding:16px;display:none;align-items:center;justify-content:space-between;gap:12px}
+.install-banner.show{display:flex}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+*:focus:not(:focus-visible){outline:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">90-Day Plan · Frontend JS</div>
+  <div class="header-row">
+    <h1>DSA Tracker</h1>
+    <div class="streak" id="streak">🔥 0 days</div>
+  </div>
+</header>
+
+<main>
+  <!-- Install banner -->
+  <section class="card install-banner" id="installBanner">
+    <div>
+      <div style="font-weight:600;color:var(--text-primary);font-size:14px">Install as app</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Add to home screen for quick daily access</div>
+    </div>
+    <button class="primary-btn" id="installBtn" style="padding:10px 16px;white-space:nowrap">Install</button>
+  </section>
+
+  <!-- Today card -->
+  <section class="card today-card" style="margin-top:16px">
+    <div class="mono day-num" id="dayNum">Day 1<span class="day-total"> /90</span></div>
+    <div class="week-topic" id="weekTopic"></div>
+    <div class="week-detail" id="weekDetail"></div>
+    <div class="section-label" id="checkinLabel" style="margin-top:20px">How did today go?</div>
+    <div class="btn-row" id="checkinBtns"></div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="card stat"><div class="mono n" id="statSolved">0</div><div class="l">Solved</div></div>
+    <div class="card stat"><div class="mono n" id="statPracticed">0</div><div class="l">Practiced</div></div>
+    <div class="card stat"><div class="mono n" id="statWeek">1/12</div><div class="l">Week</div></div>
+  </section>
+
+  <!-- Progress -->
+  <section style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
+      <span>Plan progress</span><span class="mono" id="pct" style="color:var(--accent)">0%</span>
+    </div>
+    <div class="pbar-wrap"><div class="pbar" id="pbar" style="width:0%"></div></div>
+  </section>
+
+  <!-- Heatmap -->
+  <section style="margin-top:24px">
+    <div class="section-label" style="margin-bottom:10px">90-day map <span style="font-weight:400;text-transform:none;letter-spacing:0">· tap a past day to edit</span></div>
+    <div class="grid" id="grid"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--accent)"></span>Solved</span>
+      <span><span class="dot" style="background:var(--amber)"></span>Stuck</span>
+      <span><span class="dot" style="background:var(--border)"></span>Skipped</span>
+    </div>
+  </section>
+
+  <!-- Actions -->
+  <section style="margin-top:28px;display:flex;flex-direction:column;gap:10px">
+    <button class="secondary-btn" id="copyBtn">📋 Copy progress for Claude</button>
+    <button class="secondary-btn" id="notifBtn">🔔 Enable notifications</button>
+    <div style="text-align:center;margin-top:8px">
+      <button class="ghost-btn" id="resetBtn">Reset plan</button>
+    </div>
+  </section>
+</main>
+
+<!-- Edit sheet -->
+<div class="overlay" id="overlay" style="display:none">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+const WEEKS=[
+  {topic:"Arrays Basics",detail:"Traversal, reverse, max/min, prefix sums"},
+  {topic:"Strings",detail:"Frequency counting, char manipulation"},
+  {topic:"Hashmaps & Objects",detail:"Two sum, anagrams, lookups"},
+  {topic:"Two Pointers",detail:"Palindromes, pair sums, dedupe"},
+  {topic:"Sliding Window",detail:"Substrings, max-sum subarrays"},
+  {topic:"Recursion Basics",detail:"Base cases, factorial → subsets"},
+  {topic:"Stacks & Queues",detail:"Valid parentheses, debounce/throttle"},
+  {topic:"Linked Lists",detail:"Reverse, middle node, cycle detect"},
+  {topic:"Sorting & Binary Search",detail:"Search patterns, rotated arrays"},
+  {topic:"Trees (Easy)",detail:"Traversals — think DOM tree"},
+  {topic:"JS Rounds",detail:"Polyfills: map, filter, bind, closures"},
+  {topic:"Revision Week",detail:"Promises, event loop, mixed practice"}
+];
+const STATUS={solved:{label:"Solved",emoji:"✅",color:"var(--accent)"},stuck:{label:"Stuck",emoji:"😓",color:"var(--amber)"},skipped:{label:"Skipped",emoji:"⏭",color:"var(--text-faint)"}};
+const KEY="dsa-tracker-v1",TOTAL=90;
+
+const dk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const daysBetween=(a,b)=>{const[p,q,r]=a.split("-").map(Number),[x,y,z]=b.split("-").map(Number);return Math.round((Date.UTC(x,y-1,z)-Date.UTC(p,q-1,r))/864e5)};
+
+let data;
+try{data=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!data||!data.startDate){data={startDate:dk(new Date()),checkins:{}};save()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast("⚠️ Couldn't save")}}
+
+let editDay=null;
+
+function currentDayNum(){const raw=daysBetween(data.startDate,dk(new Date()))+1;return Math.min(Math.max(raw,1),TOTAL)}
+function weekOf(day){return Math.min(Math.floor((day-1)/7),11)}
+
+function render(){
+  const day=currentDayNum(),ci=data.checkins,w=weekOf(day);
+  document.getElementById("dayNum").innerHTML=`Day ${day}<span class="day-total"> /90</span>`;
+  document.getElementById("weekTopic").textContent=`Week ${w+1} · ${WEEKS[w].topic}`;
+  document.getElementById("weekDetail").textContent=WEEKS[w].detail;
+
+  const solved=Object.values(ci).filter(s=>s==="solved").length;
+  const practiced=Object.values(ci).filter(s=>s==="solved"||s==="stuck").length;
+  document.getElementById("statSolved").textContent=solved;
+  document.getElementById("statPracticed").textContent=practiced;
+  document.getElementById("statWeek").textContent=`${w+1}/12`;
+  const pct=Math.round(practiced/TOTAL*100);
+  document.getElementById("pct").textContent=pct+"%";
+  document.getElementById("pbar").style.width=pct+"%";
+
+  let streak=0,cur=ci[day]?day:day-1;
+  while(cur>=1&&(ci[cur]==="solved"||ci[cur]==="stuck")){streak++;cur--}
+  const se=document.getElementById("streak");
+  se.textContent=`🔥 ${streak} day${streak===1?"":"s"}`;
+  se.style.color=streak>0?"var(--accent)":"var(--text-faint)";
+
+  // check-in buttons
+  const label=document.getElementById("checkinLabel");
+  label.textContent=ci[day]?"Today logged — tap to change":"How did today go?";
+  const btns=document.getElementById("checkinBtns");
+  btns.innerHTML="";
+  Object.entries(STATUS).forEach(([k,s])=>{
+    const b=document.createElement("button");
+    b.className="check-btn";
+    b.innerHTML=`<span>${s.emoji}</span> ${s.label}`;
+    const active=ci[day]===k;
+    if(active){
+      b.style.borderColor=s.color;
+      if(k==="solved"){b.style.background="var(--accent)";b.style.color="#0A0A0A"}
+      else if(k==="stuck"){b.style.background="rgba(245,158,11,.15)";b.style.color=s.color}
+      else{b.style.background="var(--border)";b.style.color=s.color}
+    }
+    b.onclick=()=>{if(active)delete data.checkins[day];else data.checkins[day]=k;save();render();if(!active&&k==="solved")toast("✅ Day "+day+" solved — keep the streak alive!")};
+    btns.appendChild(b);
+  });
+
+  // grid
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  for(let i=1;i<=TOTAL;i++){
+    const c=document.createElement("button");
+    c.className="cell"+(i===day?" today":"");
+    const st=ci[i];
+    if(st==="solved"){c.style.background="var(--accent)";c.style.borderColor="transparent"}
+    else if(st==="stuck"){c.style.background="var(--amber)";c.style.borderColor="transparent"}
+    else if(st==="skipped"){c.style.background="var(--border)";c.style.borderColor="transparent"}
+    c.disabled=i>day;
+    c.setAttribute("aria-label",`Day ${i}${st?": "+STATUS[st].label:i>day?": upcoming":": not logged"}`);
+    c.onclick=()=>openSheet(i);
+    grid.appendChild(c);
+  }
+}
+
+function openSheet(day){
+  editDay=day;
+  const w=weekOf(day),ci=data.checkins;
+  const sheet=document.getElementById("sheet");
+  let html=`<div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:4px">Day ${day} — Week ${w+1}: ${WEEKS[w].topic}</div>
+  <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Mark how this day went</div>
+  <div style="display:flex;flex-direction:column;gap:8px">`;
+  Object.entries(STATUS).forEach(([k,s])=>{
+    const active=ci[day]===k;
+    html+=`<button class="check-btn" data-status="${k}" style="justify-content:flex-start;padding:13px 16px;${active?`border-color:${s.color};color:${k==='solved'?'#0A0A0A':s.color};background:${k==='solved'?'var(--accent)':'rgba(245,158,11,.12)'}`:`color:${s.color}`}"><span>${s.emoji}</span> ${s.label}</button>`;
+  });
+  if(ci[day])html+=`<button class="check-btn" data-status="clear" style="justify-content:flex-start;padding:13px 16px">✕ Clear this day</button>`;
+  html+=`</div>`;
+  sheet.innerHTML=html;
+  sheet.querySelectorAll("[data-status]").forEach(b=>{
+    b.onclick=()=>{const s=b.dataset.status;if(s==="clear")delete data.checkins[editDay];else data.checkins[editDay]=s;save();closeSheet();render()};
+  });
+  document.getElementById("overlay").style.display="flex";
+}
+function closeSheet(){document.getElementById("overlay").style.display="none";editDay=null}
+document.getElementById("overlay").onclick=e=>{if(e.target.id==="overlay")closeSheet()};
+
+// toast
+let toastTimer;
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(t=>t.remove());
+  const t=document.createElement("div");t.className="toast";t.textContent=msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2600);
+}
+
+// copy for Claude
+document.getElementById("copyBtn").onclick=async()=>{
+  const day=currentDayNum(),ci=data.checkins;
+  const lines=[`My DSA 90-day tracker progress (Day ${day}/90, Week ${weekOf(day)+1}: ${WEEKS[weekOf(day)].topic}):`];
+  const logged=Object.keys(ci).map(Number).sort((a,b)=>a-b);
+  if(!logged.length)lines.push("No days logged yet.");
+  logged.forEach(d=>lines.push(`Day ${d} (${WEEKS[weekOf(d)].topic}): ${STATUS[ci[d]].label}`));
+  const solved=Object.values(ci).filter(s=>s==="solved").length;
+  lines.push(`Total solved: ${solved}, practiced: ${Object.values(ci).filter(s=>s==="solved"||s==="stuck").length}/${TOTAL}.`);
+  lines.push("Based on this, review my pace and tell me what to focus on next.");
+  try{await navigator.clipboard.writeText(lines.join("\n"));toast("📋 Copied — paste it to Claude!")}
+  catch(e){prompt("Copy this text:",lines.join("\n"))}
+};
+
+// notifications
+document.getElementById("notifBtn").onclick=async()=>{
+  if(!("Notification" in window)){toast("Notifications not supported here");return}
+  const perm=await Notification.requestPermission();
+  if(perm==="granted"){
+    toast("🔔 Notifications enabled!");
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification("DSA Tracker",{body:"You're all set! Open the app daily to log your practice.",icon:"icon-192.png",badge:"icon-192.png"});
+    document.getElementById("notifBtn").textContent="🔔 Notifications on";
+  }else toast("Permission denied — enable in browser settings");
+};
+
+// reset
+document.getElementById("resetBtn").onclick=()=>{
+  if(confirm("Erase all progress and restart the 90-day plan from today?")){
+    data={startDate:dk(new Date()),checkins:{}};save();render();toast("Plan reset — Day 1 starts today");
+  }
+};
+
+// PWA install
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById("installBanner").classList.add("show");
+});
+document.getElementById("installBtn").onclick=async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById("installBanner").classList.remove("show");
+};
+window.addEventListener("appinstalled",()=>{toast("📱 Installed! Find it on your home screen");document.getElementById("installBanner").classList.remove("show")});
+
+// service worker
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+
+render();
+// re-render at midnight rollover if app stays open
+setInterval(render,60000);
+</script>
+</body>
+</html>
