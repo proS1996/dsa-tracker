@@ -69,6 +69,32 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .stat .l{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-top:2px}
 .pro-banner{margin-top:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pro-banner.unlocked{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}
+.streak-msg{font-size:12px;color:var(--text-muted);margin-top:2px}
+.nudge{display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:10px 12px;border-radius:8px;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:var(--bg-inset);color:var(--text-muted)}
+.nudge.show{display:flex}
+.nudge.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);color:var(--amber)}
+.nudge.urgent{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--red);animation:pulse 2s ease-in-out infinite}
+.reward-section{margin-top:16px}
+.rewards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.reward{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;opacity:.4;filter:grayscale(1)}
+.reward.unlocked{opacity:1;filter:none;border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}
+.reward .em{font-size:22px;line-height:1}
+.reward .lbl{font-size:10.5px;font-weight:700;color:var(--text-body);margin-top:5px;line-height:1.3}
+.reward .dsc{font-size:9.5px;color:var(--text-faint);margin-top:2px;line-height:1.3}
+.reminder-card{margin-top:10px;padding:16px}
+.reminder-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+.time-input{background:var(--bg-inset);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text-primary);font:600 14px/1 'Inter';flex:1}
+.reminder-note{font-size:11px;color:var(--text-faint);margin-top:8px;line-height:1.5}
+.confetti-piece{position:fixed;top:-12px;width:8px;height:14px;border-radius:2px;pointer-events:none;z-index:300;animation:confettiFall 1.7s cubic-bezier(.25,.46,.45,.94) forwards}
+@keyframes confettiFall{to{transform:translate(var(--dx,0),112vh) rotate(var(--rot,720deg));opacity:0}}
+.sad-card,.hero-card{margin-top:14px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-inset);display:none;align-items:center;gap:12px}
+.sad-card.show,.hero-card.show{display:flex}
+.sad-emoji{font-size:26px;flex-shrink:0;animation:sadFloat 3s ease-in-out infinite}
+@keyframes sadFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-4deg)}}
+.hero-card{border-color:rgba(0,229,153,.3);background:linear-gradient(135deg,rgba(0,229,153,.08),rgba(139,92,246,.08))}
+.hero-icon{flex-shrink:0;animation:heroFloat 2.4s ease-in-out infinite}
+.hero-icon svg{width:32px;height:32px;display:block}
+@keyframes heroFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
 .pbar-wrap{height:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;overflow:hidden}
 .pbar{height:100%;background:var(--accent);border-radius:9999px;transition:width .5s cubic-bezier(0,0,.2,1)}
 .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
@@ -103,12 +129,14 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 </style>
 </head>
 <body>
+<div id="confettiLayer" style="position:fixed;inset:0;overflow:hidden;pointer-events:none"></div>
 <header>
   <div class="badge">84-Day Plan · Frontend JS</div>
   <div class="header-row">
     <h1>DSA Tracker</h1>
     <div class="streak" id="streak">🔥 0 days</div>
   </div>
+  <div class="streak-msg" id="streakMsg"></div>
   <div class="track-row">
     <select class="track-select mono" id="trackSelect"></select>
   </div>
@@ -147,6 +175,18 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
     <div class="statement-box" id="statementBox" style="display:none"></div>
     <div class="section-label" id="checkinLabel" style="margin-top:20px">How did today go?</div>
     <div class="btn-row" id="checkinBtns"></div>
+    <div class="nudge" id="startNudge"><span id="startNudgeText"></span></div>
+    <div class="sad-card" id="sadCard">
+      <span class="sad-emoji">😔</span>
+      <div>
+        <div style="font-weight:700;color:var(--text-primary);font-size:13px">Streak reset</div>
+        <div style="font-size:12px;color:var(--text-muted)" id="sadCardText"></div>
+      </div>
+    </div>
+    <div class="hero-card" id="heroCard">
+      <span class="hero-icon" id="heroIcon"></span>
+      <div style="font-size:12.5px;color:var(--text-body);font-weight:600;line-height:1.4" id="heroQuote"></div>
+    </div>
   </section>
 
   <!-- Stats -->
@@ -163,6 +203,12 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
       <div style="font-weight:700;color:var(--text-primary);font-size:14px" id="proTitle">🏆 Pro Solver</div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:2px" id="proDesc">Solve without tapping the hint to earn it</div>
     </div>
+  </section>
+
+  <!-- Rewards -->
+  <section class="reward-section">
+    <div class="section-label">🏅 Rewards <span style="font-weight:400;text-transform:none;letter-spacing:0">· unlocked as you build the habit</span></div>
+    <div class="rewards-grid" id="rewardsGrid"></div>
   </section>
 
   <!-- Progress -->
@@ -189,6 +235,15 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
   <section style="margin-top:28px;display:flex;flex-direction:column;gap:10px">
     <button class="secondary-btn" id="copyBtn">📋 Copy progress for Claude</button>
     <button class="secondary-btn" id="notifBtn">🔔 Enable notifications</button>
+    <div class="card reminder-card" id="reminderCard" style="display:none">
+      <div style="font-weight:600;color:var(--text-primary);font-size:14px">⏰ Daily reminder</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Get nudged if you haven't started today's problem yet</div>
+      <div class="reminder-row">
+        <input type="time" class="time-input" id="reminderTime" value="08:00">
+        <button class="primary-btn" id="saveReminderBtn" style="padding:9px 16px;white-space:nowrap">Save</button>
+      </div>
+      <div class="reminder-note">Reminders fire while this app is open or freshly reopened — since there's no backend server here, delivery isn't guaranteed while it's fully closed, especially on iPhone. Opening the app each morning is still the most reliable trigger.</div>
+    </div>
     <div style="text-align:center;margin-top:8px">
       <button class="ghost-btn" id="resetBtn">Reset this track</button>
     </div>
@@ -489,7 +544,7 @@ const DIFF_COLOR={Easy:"var(--accent)",Medium:"var(--amber)",Hard:"var(--red)","
 const STATUS={solved:{label:"Solved",emoji:"✅",color:"var(--accent)"},stuck:{label:"Stuck",emoji:"😓",color:"var(--amber)"},skipped:{label:"Skipped",emoji:"⏭",color:"var(--text-faint)"}};
 const KEY="dsa-tracker-v4",TOTAL=84;
 
-function emptyTrackData(){return{checkins:{},hints:{}}}
+function emptyTrackData(){return{checkins:{},hints:{},achievements:{}}}
 
 let data;
 try{data=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -500,14 +555,23 @@ if(!data||!data.tracks){
   data={
     activeTrack:"2024",
     tracks:{
-      "2024":(old&&old.checkins)?{checkins:old.checkins,hints:{}}:emptyTrackData(),
+      "2024":(old&&old.checkins)?{checkins:old.checkins,hints:{},achievements:{}}:emptyTrackData(),
       "2025":emptyTrackData(),
       "2026":emptyTrackData()
     }
   };
   save();
 }
+// backfill fields for people upgrading from earlier versions
+Object.keys(data.tracks).forEach(id=>{if(!data.tracks[id].achievements)data.tracks[id].achievements={}});
+if(!data.reminderTime)data.reminderTime="08:00";
+if(!data.lastActiveDate)data.lastActiveDate=null;
+if(!data.lastReminderNotifDate)data.lastReminderNotifDate=null;
+if(!data.lastUrgentNotifDate)data.lastUrgentNotifDate=null;
+
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast("⚠️ Couldn't save")}}
+function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function markActiveToday(){data.lastActiveDate=todayISO()}
 
 function curTrack(){return data.tracks[data.activeTrack]}
 function curProblems(){return PROBLEMS_BY_TRACK[data.activeTrack]}
@@ -564,6 +628,108 @@ function renderTrackSelect(){
 function proCount(){
   const t=curTrack();
   return Object.keys(t.checkins).filter(d=>t.checkins[d]==="solved"&&!t.hints[d]).length;
+}
+
+const ACHIEVEMENTS=[
+  {id:"first",emoji:"🌱",label:"First Step",desc:"Log day 1",check:(s)=>s.practiced>=1},
+  {id:"streak3",emoji:"🔥",label:"Warming Up",desc:"3-day streak",check:(s)=>s.streak>=3},
+  {id:"streak7",emoji:"⚡",label:"Week Warrior",desc:"7-day streak",check:(s)=>s.streak>=7},
+  {id:"streak14",emoji:"💪",label:"Two-Week Titan",desc:"14-day streak",check:(s)=>s.streak>=14},
+  {id:"streak30",emoji:"🚀",label:"Unstoppable",desc:"30-day streak",check:(s)=>s.streak>=30},
+  {id:"solved10",emoji:"🎯",label:"Getting Sharp",desc:"10 solved",check:(s)=>s.solved>=10},
+  {id:"solved25",emoji:"🥉",label:"Quarter Century",desc:"25 solved",check:(s)=>s.solved>=25},
+  {id:"solved50",emoji:"🥈",label:"Halfway Hero",desc:"50 solved",check:(s)=>s.solved>=50},
+  {id:"pro5",emoji:"🧠",label:"No-Hint Novice",desc:"5 no-hint solves",check:(s)=>s.pro>=5},
+  {id:"pro20",emoji:"👑",label:"No-Hint Master",desc:"20 no-hint solves",check:(s)=>s.pro>=20},
+  {id:"practiced84",emoji:"🏆",label:"Plan Finisher",desc:"All 84 days practiced",check:(s)=>s.practiced>=84}
+];
+function streakMessage(streak){
+  if(streak<=0)return"Log today's problem to start a new streak.";
+  if(streak<3)return"Nice start — keep it going!";
+  if(streak<7)return"You're building real momentum 🔥";
+  if(streak<14)return"A full week strong — great consistency!";
+  if(streak<30)return"Two+ weeks in — you're doing great, keep pushing!";
+  return"30+ day streak — you're unstoppable. Incredible work.";
+}
+function renderRewards(t,stats){
+  const grid=document.getElementById("rewardsGrid");
+  grid.innerHTML="";
+  ACHIEVEMENTS.forEach(a=>{
+    const unlocked=!!a.check(stats);
+    const wasUnlocked=!!t.achievements[a.id];
+    if(unlocked&&!wasUnlocked){
+      t.achievements[a.id]=true;
+      toast(`🏅 Reward unlocked — ${a.label}!`);
+    }
+    const el=document.createElement("div");
+    el.className="reward"+(unlocked?" unlocked":"");
+    el.innerHTML=`<div class="em">${a.emoji}</div><div class="lbl">${a.label}</div><div class="dsc">${a.desc}</div>`;
+    grid.appendChild(el);
+  });
+}
+function renderStartNudge(day,ci){
+  const nudge=document.getElementById("startNudge");
+  const textEl=document.getElementById("startNudgeText");
+  const startedToday=data.lastActiveDate===todayISO();
+  if(startedToday||ci[day]){nudge.classList.remove("show","warn","urgent");return}
+  const now=new Date();
+  const midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,0);
+  const msLeft=midnight-now;
+  const hrs=Math.floor(msLeft/3600000),mins=Math.floor((msLeft%3600000)/60000);
+  nudge.classList.add("show");
+  nudge.classList.remove("warn","urgent");
+  if(hrs<1){nudge.classList.add("urgent");textEl.textContent=`⏳ Only ${mins}m left today — start Day ${day} now to keep your streak!`}
+  else if(hrs<4){nudge.classList.add("warn");textEl.textContent=`⏳ ${hrs}h ${mins}m left today — you haven't started Day ${day} yet.`}
+  else{textEl.textContent=`⏳ ${hrs}h ${mins}m left today to log Day ${day}.`}
+}
+
+const HERO_ICON_SVG=`<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <path d="M24 4 L40 11 V22 C40 33 33 40.5 24 44 C15 40.5 8 33 8 22 V11 Z" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M24 12 L29 24 L24 22 L19 24 Z" fill="var(--accent)"/>
+</svg>`;
+const HERO_QUOTES=[
+  "Every hero was once a beginner. Today's rep makes you stronger tomorrow.",
+  "Villains give up when it gets hard. Heroes show up anyway — like you just did.",
+  "No superpower beats showing up every single day. You're proof of that.",
+  "Your streak is your cape. Keep wearing it.",
+  "Great power comes from great repetition — training arc in progress.",
+  "The city doesn't need luck, it needs someone who keeps coming back. That's you.",
+  "You're not just solving problems — you're leveling up, one day at a time.",
+  "Consistency is the real origin story. Yours is looking unstoppable."
+];
+function burstConfetti(){
+  const layer=document.getElementById("confettiLayer");
+  const colors=["var(--accent)","var(--purple)","var(--amber)","var(--blue)","#EC4899"];
+  for(let i=0;i<32;i++){
+    const p=document.createElement("div");
+    p.className="confetti-piece";
+    p.style.left=(30+Math.random()*40)+"vw";
+    p.style.background=colors[i%colors.length];
+    p.style.setProperty("--dx",(Math.random()*220-110)+"px");
+    p.style.setProperty("--rot",(360+Math.random()*720)+"deg");
+    p.style.animationDuration=(1.2+Math.random()*0.8)+"s";
+    p.style.animationDelay=(Math.random()*0.15)+"s";
+    layer.appendChild(p);
+    setTimeout(()=>p.remove(),2400);
+  }
+}
+function updateHeroSadCards(day,streak,practiced){
+  const sad=document.getElementById("sadCard"),sadText=document.getElementById("sadCardText");
+  const hero=document.getElementById("heroCard"),heroQuote=document.getElementById("heroQuote"),heroIcon=document.getElementById("heroIcon");
+  const startedToday=data.lastActiveDate===todayISO();
+  if(streak===0&&practiced>0&&!startedToday){
+    sad.classList.add("show");
+    sadText.textContent=`No problem logged yesterday, so the streak reset. Solve Day ${day} today to start a new one.`;
+  }else{
+    sad.classList.remove("show");
+  }
+  if(streak>=3){
+    if(!heroIcon.innerHTML)heroIcon.innerHTML=HERO_ICON_SVG;
+    hero.classList.add("show");
+    heroQuote.textContent=HERO_QUOTES[(streak+day)%HERO_QUOTES.length];
+  }else{
+    hero.classList.remove("show");
+  }
 }
 
 function render(){
@@ -634,6 +800,11 @@ function render(){
   const se=document.getElementById("streak");
   se.textContent=`🔥 ${streak} day${streak===1?"":"s"}`;
   se.style.color=streak>0?"var(--accent)":"var(--text-faint)";
+  document.getElementById("streakMsg").textContent=streakMessage(streak);
+
+  renderRewards(t,{solved,practiced,pro,streak});
+  renderStartNudge(day,ci);
+  updateHeroSadCards(day,streak,practiced);
 
   // check-in buttons
   const label=document.getElementById("checkinLabel");
@@ -653,9 +824,10 @@ function render(){
     }
     b.onclick=()=>{
       if(active){delete ci[day]}
-      else{ci[day]=k}
+      else{ci[day]=k;markActiveToday()}
       save();render();
       if(!active&&k==="solved"){
+        burstConfetti();
         if(!hints[day])toast("🏆 No-hint solve — that's a Pro point!");
         else toast("✅ Day "+day+" solved — keep the streak alive!");
       }
@@ -718,9 +890,10 @@ function openSheet(day){
       const s=b.dataset.status;
       const wasActive=ci[editDay]===s;
       if(s==="clear")delete ci[editDay];
-      else ci[editDay]=s;
+      else{ci[editDay]=s;markActiveToday()}
       save();closeSheet();render();
       if(s==="solved"&&!wasActive){
+        burstConfetti();
         if(!hints[editDay])toast("🏆 No-hint solve — that's a Pro point!");
       }
     };
@@ -753,7 +926,17 @@ document.getElementById("copyBtn").onclick=async()=>{
   catch(e){prompt("Copy this text:",lines.join("\n"))}
 };
 
-// notifications
+// notifications + daily reminder
+const reminderCard=document.getElementById("reminderCard");
+const reminderTimeInput=document.getElementById("reminderTime");
+reminderTimeInput.value=data.reminderTime;
+
+function refreshNotifUI(){
+  const enabled="Notification" in window&&Notification.permission==="granted";
+  document.getElementById("notifBtn").textContent=enabled?"🔔 Notifications on":"🔔 Enable notifications";
+  reminderCard.style.display=enabled?"block":"none";
+}
+
 document.getElementById("notifBtn").onclick=async()=>{
   if(isIOS&&!isStandalone){toast("📤 Add to Home Screen first — iOS only allows notifications for installed apps");return}
   if(!("Notification" in window)){toast("Notifications not supported here");return}
@@ -761,10 +944,57 @@ document.getElementById("notifBtn").onclick=async()=>{
   if(perm==="granted"){
     toast("🔔 Notifications enabled!");
     const reg=await navigator.serviceWorker.ready;
-    reg.showNotification("DSA Tracker",{body:"You're all set! Open the app daily to log your practice.",icon:"icon-192.png",badge:"icon-192.png"});
-    document.getElementById("notifBtn").textContent="🔔 Notifications on";
+    reg.showNotification("DSA Tracker",{body:`You're all set! We'll nudge you around ${data.reminderTime} if you haven't started that day's problem.`,icon:"icon-192.png",badge:"icon-192.png"});
+    refreshNotifUI();
   }else toast("Permission denied — enable in browser settings");
 };
+
+document.getElementById("saveReminderBtn").onclick=()=>{
+  data.reminderTime=reminderTimeInput.value||"08:00";
+  data.lastReminderNotifDate=null; // allow a fresh reminder at the new time today
+  save();
+  toast(`⏰ Reminder set for ${data.reminderTime}`);
+};
+
+async function fireLocalNotification(title,body){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification(title,{body,icon:"icon-192.png",badge:"icon-192.png"});
+  }catch(e){}
+}
+
+// Best-effort daily nudge: checked whenever the app is open/foregrounded.
+// There's no backend here, so this can't fire while the app/tab is fully
+// closed — it catches up the moment the person reopens it instead.
+function checkReminder(){
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  const today=todayISO();
+  if(data.lastActiveDate===today)return; // already practiced today, nothing to nudge about
+  const now=new Date();
+  const [rh,rm]=(data.reminderTime||"08:00").split(":").map(Number);
+  const reminderAt=new Date(now.getFullYear(),now.getMonth(),now.getDate(),rh,rm,0);
+  const day=currentDayNum();
+  const t=curTrack();
+  let streak=0,cur=t.checkins[day]?day:day-1;
+  while(cur>=1&&(t.checkins[cur]==="solved"||t.checkins[cur]==="stuck")){streak++;cur--}
+
+  if(now>=reminderAt&&data.lastReminderNotifDate!==today){
+    data.lastReminderNotifDate=today;save();
+    fireLocalNotification("⏰ Time for today's problem",
+      streak>0?`Day ${day} is waiting — keep your ${streak}-day streak alive!`:`Day ${day} is waiting. Let's get a streak going!`);
+  }
+  const urgentAt=new Date(now.getFullYear(),now.getMonth(),now.getDate(),22,0,0);
+  if(now>=urgentAt&&data.lastUrgentNotifDate!==today){
+    data.lastUrgentNotifDate=today;save();
+    fireLocalNotification("⚠️ A couple hours left today",
+      streak>0?`Don't lose your ${streak}-day streak — Day ${day} only takes a few minutes.`:`Day ${day} is still open — a quick solve keeps the habit alive.`);
+  }
+}
+refreshNotifUI();
+checkReminder();
+setInterval(checkReminder,60000);
+setInterval(()=>{renderStartNudge(currentDayNum(),curTrack().checkins)},60000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){checkReminder();renderStartNudge(currentDayNum(),curTrack().checkins)}});
 
 // reset (current track only)
 document.getElementById("resetBtn").onclick=()=>{
