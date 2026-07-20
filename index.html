@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F1117">
 <title>DSA Tracker — 84-Day Problem List</title>
+<meta property="og:title" content="DSA Tracker — 84-Day Problem List">
+<meta property="og:description" content="A daily data structures & algorithms interview prep tracker — streaks, curated problems, and progress badges.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -63,6 +67,8 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .check-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;border-radius:8px;font:600 14px/1 'Inter';cursor:pointer;transition:transform 150ms cubic-bezier(.34,1.56,.64,1),background 200ms,border-color 200ms,color 200ms;background:transparent;border:1.5px solid var(--border);color:var(--text-muted);flex:1}
 .check-btn:active{transform:scale(.96)}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.share-li-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;padding:12px;border-radius:10px;border:1.5px solid #0A66C2;background:rgba(10,102,194,.08);color:#0A66C2;font:600 13.5px/1 'Inter';cursor:pointer;transition:transform 150ms cubic-bezier(.34,1.56,.64,1),background 200ms}
+.share-li-btn:active{transform:scale(.97);background:rgba(10,102,194,.16)}
 .stat{padding:14px 8px;text-align:center}
 .stat .n{font-size:22px;font-weight:700;color:var(--accent)}
 .stat.pro .n{color:var(--purple)}
@@ -196,6 +202,12 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
     <div class="card stat pro"><div class="mono n" id="statPro">0</div><div class="l">No-Hint Solves</div></div>
     <div class="card stat"><div class="mono n" id="statWeek">1/12</div><div class="l">Week</div></div>
   </section>
+
+  <!-- Share progress -->
+  <button class="share-li-btn" id="shareLinkedInBtn" type="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.14 1.45-2.14 2.94v5.66H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.59 0 4.26 2.37 4.26 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+    Share progress on LinkedIn
+  </button>
 
   <!-- Pro banner -->
   <section class="card pro-banner" id="proBanner" style="margin-top:12px">
@@ -577,6 +589,7 @@ function curTrack(){return data.tracks[data.activeTrack]}
 function curProblems(){return PROBLEMS_BY_TRACK[data.activeTrack]}
 
 let editDay=null,showStatement=false;
+let shareStats={solved:0,practiced:0,pro:0,week:1,pct:0,streak:0};
 
 function currentDayNum(){
   const ci=curTrack().checkins;
@@ -780,6 +793,7 @@ function render(){
   const pct=Math.round(practiced/TOTAL*100);
   document.getElementById("pct").textContent=pct+"%";
   document.getElementById("pbar").style.width=pct+"%";
+  shareStats={solved,practiced,pro,week:p.week+1,pct};
 
   // Pro banner
   const banner=document.getElementById("proBanner");
@@ -801,6 +815,7 @@ function render(){
   se.textContent=`🔥 ${streak} day${streak===1?"":"s"}`;
   se.style.color=streak>0?"var(--accent)":"var(--text-faint)";
   document.getElementById("streakMsg").textContent=streakMessage(streak);
+  shareStats.streak=streak;
 
   renderRewards(t,{solved,practiced,pro,streak});
   renderStartNudge(day,ci);
@@ -924,6 +939,28 @@ document.getElementById("copyBtn").onclick=async()=>{
   lines.push("Based on this, review my pace and tell me what to focus on next.");
   try{await navigator.clipboard.writeText(lines.join("\n"));toast("📋 Copied — paste it to Claude!")}
   catch(e){prompt("Copy this text:",lines.join("\n"))}
+};
+
+// share progress on LinkedIn
+document.getElementById("shareLinkedInBtn").onclick=async()=>{
+  const s=shareStats;
+  const trackLabel=TRACK_META[data.activeTrack].label;
+  const lines=[
+    `📈 DSA interview prep update — ${trackLabel}`,
+    ``,
+    `🔥 ${s.streak}-day streak`,
+    `✅ ${s.solved} problems solved (${s.practiced} attempted, ${s.pct}% through the 84-day plan)`,
+    `🏆 ${s.pro} solved without a hint`,
+    `Week ${s.week}/12`,
+    ``,
+    `Tracking daily practice with a self-hosted tracker I built. #DSA #CodingInterview #100DaysOfCode`
+  ].join("\n");
+  const shareUrl=location.href.split("#")[0].split("?")[0];
+  // LinkedIn's share dialog only accepts a URL param — it doesn't accept prefilled post text,
+  // so we copy a ready-to-paste summary to the clipboard and open the composer alongside it.
+  try{await navigator.clipboard.writeText(lines);toast("📋 Progress copied — paste it into your LinkedIn post!")}
+  catch(e){prompt("Copy this text to paste into LinkedIn:",lines)}
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,"_blank","noopener,noreferrer");
 };
 
 // notifications + daily reminder
