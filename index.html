@@ -123,6 +123,8 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .sheet-nav-btn:active:not(:disabled){transform:scale(.9)}
 .sheet-nav-btn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .sheet-nav-btn:disabled{opacity:.3;cursor:default}
+.challenge-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:9999px;font:600 12px/1 'Inter';color:var(--purple);background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3)}
+.recap-banner{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);width:calc(100% - 40px);max-width:440px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;z-index:200;box-shadow:0 12px 32px rgba(0,0,0,.4);animation:slideUp .3s cubic-bezier(0,0,.2,1)}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .ghost-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:8px;font-family:'Inter'}
@@ -177,6 +179,19 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
     <div class="step"><span class="ico">✅</span> Tap <b>Add</b> — the icon appears on your Home Screen</div>
     <button class="dismiss" id="iosBannerDismiss">Got it, hide this</button>
   </section>
+
+  <!-- Challenge banner (shown when arriving via a ?challenge= link) -->
+  <section class="card challenge-banner" id="challengeBanner" style="display:none">
+    <div style="font-weight:700;color:var(--text-primary);font-size:14px" id="challengeBannerTitle">🎯 You've been challenged!</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px" id="challengeBannerDesc"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="primary-btn" id="challengeAcceptBtn" style="flex:1;padding:10px">Accept challenge</button>
+      <button class="check-btn" id="challengeDismissBtn" style="flex:0 0 auto;padding:10px 16px">Not now</button>
+    </div>
+  </section>
+
+  <!-- Active challenge progress pill -->
+  <div class="challenge-pill" id="challengePill" style="display:none"></div>
 
   <!-- Today card -->
   <section class="card today-card" style="margin-top:16px">
@@ -570,7 +585,7 @@ const DIFF_COLOR={Easy:"var(--accent)",Medium:"var(--amber)",Hard:"var(--red)","
 const STATUS={solved:{label:"Solved",emoji:"✅",color:"var(--accent)"},stuck:{label:"Stuck",emoji:"😓",color:"var(--amber)"},skipped:{label:"Skipped",emoji:"⏭",color:"var(--text-faint)"}};
 const KEY="dsa-tracker-v4",TOTAL=84;
 
-function emptyTrackData(){return{checkins:{},hints:{},achievements:{}}}
+function emptyTrackData(){return{checkins:{},hints:{},achievements:{},lastRecapWeek:0}}
 
 let data;
 try{data=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -594,6 +609,9 @@ if(!data.reminderTime)data.reminderTime="08:00";
 if(!data.lastActiveDate)data.lastActiveDate=null;
 if(!data.lastReminderNotifDate)data.lastReminderNotifDate=null;
 if(!data.lastUrgentNotifDate)data.lastUrgentNotifDate=null;
+if(data.challengeTarget===undefined)data.challengeTarget=null;
+if(data.challengeStartDay===undefined)data.challengeStartDay=null;
+Object.keys(data.tracks).forEach(id=>{if(!data.tracks[id].lastRecapWeek)data.tracks[id].lastRecapWeek=0});
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast("⚠️ Couldn't save")}}
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -830,10 +848,12 @@ function render(){
   se.style.color=streak>0?"var(--accent)":"var(--text-faint)";
   document.getElementById("streakMsg").textContent=streakMessage(streak);
   shareStats.streak=streak;
+  renderChallengePill(streak);
 
   renderRewards(t,{solved,practiced,pro,streak});
   renderStartNudge(day,ci);
   updateHeroSadCards(day,streak,practiced);
+  checkWeeklyRecap(t,day,ci);
 
   // check-in buttons
   const label=document.getElementById("checkinLabel");
@@ -970,6 +990,159 @@ document.getElementById("copyBtn").onclick=async()=>{
 };
 
 // share progress on LinkedIn
+// challenge progress pill (shown when an active challenge exists)
+function renderChallengePill(streak){
+  const pill=document.getElementById("challengePill");
+  if(!data.challengeTarget){pill.style.display="none";return}
+  if(streak>=data.challengeTarget){
+    pill.textContent=`🏆 Challenge complete — ${data.challengeTarget}-day streak hit!`;
+  }else{
+    pill.textContent=`🎯 Challenge: ${streak}/${data.challengeTarget}-day streak`;
+  }
+  pill.style.display="inline-flex";
+}
+
+// incoming ?challenge=N link — offer to accept
+(function initChallengeBanner(){
+  const params=new URLSearchParams(location.search);
+  const challengeParam=params.get("challenge");
+  if(!challengeParam)return;
+  const days=Math.max(1,parseInt(challengeParam,10)||7);
+  const banner=document.getElementById("challengeBanner");
+  document.getElementById("challengeBannerDesc").textContent=
+    data.challengeTarget
+      ? `You already have a ${data.challengeTarget}-day challenge running.`
+      : `A teammate dared you to hit a ${days}-day streak. Ready to take it on?`;
+  banner.style.display="block";
+  document.getElementById("challengeAcceptBtn").onclick=()=>{
+    data.challengeTarget=days;
+    data.challengeStartDay=currentDayNum();
+    save();
+    banner.style.display="none";
+    history.replaceState(null,"",location.pathname);
+    render();
+    toast(`🎯 Challenge accepted — hit a ${days}-day streak!`);
+  };
+  document.getElementById("challengeDismissBtn").onclick=()=>{
+    banner.style.display="none";
+    history.replaceState(null,"",location.pathname);
+  };
+})();
+
+// weekly recap — nudge to share once a week is completed
+function checkWeeklyRecap(t,day,ci){
+  if(day%7!==0||!ci[day])return;
+  const weekNum=Math.ceil(day/7);
+  if(t.lastRecapWeek>=weekNum)return;
+  t.lastRecapWeek=weekNum;
+  save();
+  showWeeklyRecapBanner(weekNum);
+}
+function showWeeklyRecapBanner(weekNum){
+  document.querySelectorAll(".recap-banner").forEach(b=>b.remove());
+  const b=document.createElement("div");
+  b.className="recap-banner";
+  b.innerHTML=`<div style="font-weight:700;font-size:13px;color:var(--text-primary)">🎉 Week ${weekNum} complete!</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Nice consistency. Want to share this week's progress?</div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="primary-btn" id="recapShareBtn" style="flex:1;padding:9px">Share progress</button>
+      <button class="check-btn" id="recapDismissBtn" style="flex:0 0 auto;padding:9px 14px">Dismiss</button>
+    </div>`;
+  document.body.appendChild(b);
+  document.getElementById("recapShareBtn").onclick=()=>{b.remove();openShareSheet()};
+  document.getElementById("recapDismissBtn").onclick=()=>b.remove();
+}
+
+// canvas helpers for the downloadable stat card
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight,maxLines){
+  const words=text.split(" ");
+  let line="",cy=y,lines=0;
+  for(const w of words){
+    const test=line+w+" ";
+    if(ctx.measureText(test).width>maxWidth&&line){
+      ctx.fillText(line,x,cy);
+      line=w+" ";cy+=lineHeight;lines++;
+      if(maxLines&&lines>=maxLines-1){ctx.fillText(line.trim()+"…",x,cy);return}
+    }else line=test;
+  }
+  ctx.fillText(line,x,cy);
+}
+async function drawStatCardCanvas(){
+  if(document.fonts&&document.fonts.ready)try{await document.fonts.ready}catch(e){}
+  const t=curTrack(),ci=t.checkins,s=shareStats;
+  const trackLabel=TRACK_META[data.activeTrack].label;
+  const earned=ACHIEVEMENTS.filter(a=>a.check(s));
+
+  const W=1200,H=630;
+  const canvas=document.createElement("canvas");
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+
+  ctx.fillStyle="#0A0A0A";ctx.fillRect(0,0,W,H);
+  const grad=ctx.createRadialGradient(140,90,0,140,90,650);
+  grad.addColorStop(0,"rgba(0,229,153,.14)");
+  grad.addColorStop(1,"rgba(0,229,153,0)");
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+  ctx.textBaseline="alphabetic";
+  ctx.fillStyle="#00E599";
+  ctx.font="700 16px Inter, sans-serif";
+  ctx.fillText(("DSA TRACKER · "+trackLabel).toUpperCase(),60,56);
+
+  ctx.fillStyle="#FFFFFF";
+  ctx.font="800 100px Inter, sans-serif";
+  ctx.fillText(`🔥 ${s.streak}`,60,190);
+  ctx.fillStyle="#9CA3AF";
+  ctx.font="600 22px Inter, sans-serif";
+  ctx.fillText("DAY STREAK",60,222);
+
+  const stats=[["SOLVED",s.solved],["PRACTICED",s.practiced],["NO-HINT",s.pro],["PLAN",s.pct+"%"]];
+  let sx=60;
+  stats.forEach(([label,val])=>{
+    ctx.fillStyle="#00E599";
+    ctx.font="700 36px Inter, sans-serif";
+    ctx.fillText(String(val),sx,292);
+    ctx.fillStyle="#64748B";
+    ctx.font="600 13px Inter, sans-serif";
+    ctx.fillText(label,sx,316);
+    sx+=180;
+  });
+
+  ctx.fillStyle="#8B5CF6";
+  ctx.font="600 16px Inter, sans-serif";
+  const badgeText=earned.length?earned.map(a=>`${a.emoji} ${a.label}`).join("   "):"🌱 First badge coming soon";
+  wrapCanvasText(ctx,badgeText,60,368,W-120,26,2);
+
+  const cols=21,cell=15,gap=5;
+  let hx=60,hy=452;
+  for(let i=0;i<TOTAL;i++){
+    const day=i+1,st=ci[day];
+    let color="#2A2D3A";
+    if(st==="solved")color="#00E599";
+    else if(st==="stuck")color="#F59E0B";
+    else if(st==="skipped")color="#3A3D4A";
+    const col=i%cols,row=Math.floor(i/cols);
+    ctx.fillStyle=color;
+    roundRectPath(ctx,hx+col*(cell+gap),hy+row*(cell+gap),cell,cell,3);
+    ctx.fill();
+  }
+
+  ctx.fillStyle="#64748B";
+  ctx.font="500 16px Inter, sans-serif";
+  ctx.fillText(location.host+(location.pathname==="/"?"":location.pathname),60,H-36);
+
+  return canvas;
+}
+
 function buildShareText(){
   const s=shareStats;
   const trackLabel=TRACK_META[data.activeTrack].label;
@@ -1004,6 +1177,10 @@ function openShareSheet(){
     <div class="share-actions">
       <button class="check-btn" id="shareCopyBtn">📋 Copy text</button>
       <button class="primary-btn" id="shareOpenBtn" style="flex:1">Open LinkedIn ▸</button>
+    </div>
+    <div class="share-actions">
+      <button class="check-btn" id="shareImgBtn">🖼️ Download stat card</button>
+      <button class="check-btn" id="shareChallengeBtn">🎯 Copy challenge link</button>
     </div>`;
   document.getElementById("shareOverlay").style.display="flex";
   document.getElementById("shareCopyBtn").onclick=async()=>{
@@ -1016,6 +1193,24 @@ function openShareSheet(){
     try{await navigator.clipboard.writeText(val)}catch(e){}
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,"_blank","noopener,noreferrer");
     toast("📋 Copied — paste it into the post that just opened!");
+  };
+  document.getElementById("shareImgBtn").onclick=async()=>{
+    toast("🖼️ Generating your stat card…");
+    const canvas=await drawStatCardCanvas();
+    canvas.toBlob(blob=>{
+      if(!blob){toast("⚠️ Couldn't generate image");return}
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download="dsa-tracker-progress.png";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      toast("🖼️ Saved — attach it as an image on your LinkedIn post!");
+    },"image/png");
+  };
+  document.getElementById("shareChallengeBtn").onclick=async()=>{
+    const link=`${location.origin}${location.pathname}?challenge=7`;
+    try{await navigator.clipboard.writeText(link);toast("🎯 Challenge link copied — send it to a teammate!")}
+    catch(e){prompt("Copy this challenge link:",link)}
   };
 }
 document.getElementById("shareLinkedInBtn").onclick=openShareSheet;
