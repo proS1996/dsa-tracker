@@ -118,6 +118,11 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
 .sheet{background:var(--bg-surface);border:1px solid var(--border);border-bottom:none;border-radius:16px 16px 0 0;padding:24px 20px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:82vh;overflow-y:auto;animation:slideUp .3s cubic-bezier(0,0,.2,1)}
+.sheet-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet-nav-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-primary);font:600 18px/1 'Inter';cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 150ms cubic-bezier(.34,1.56,.64,1),background 200ms,border-color 200ms}
+.sheet-nav-btn:active:not(:disabled){transform:scale(.9)}
+.sheet-nav-btn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.sheet-nav-btn:disabled{opacity:.3;cursor:default}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .ghost-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:8px;font-family:'Inter'}
@@ -880,7 +885,12 @@ function openSheet(day){
   editDay=day;
   const t=curTrack(),ci=t.checkins,hints=t.hints,problems=curProblems(),p=problems[day-1];
   const sheet=document.getElementById("sheet");
-  let html=`<div style="font-size:11px;color:var(--text-faint);margin-bottom:4px">Day ${day} · Week ${p.week+1}: ${esc(p.weekTopic)}</div>
+  let html=`<div class="sheet-nav">
+    <button class="sheet-nav-btn" id="sheetPrevBtn" ${day<=1?"disabled":""} aria-label="Previous day">‹</button>
+    <span class="mono">Day ${day} / ${TOTAL}</span>
+    <button class="sheet-nav-btn" id="sheetNextBtn" ${day>=TOTAL?"disabled":""} aria-label="Next day">›</button>
+  </div>
+  <div style="font-size:11px;color:var(--text-faint);margin-bottom:4px">Day ${day} · Week ${p.week+1}: ${esc(p.weekTopic)}</div>
   <div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:8px">${esc(p.title)}</div>`;
   if(p.difficulty!=="—"){
     html+=`<span class="badge-diff" style="color:${DIFF_COLOR[p.difficulty]};border-color:${DIFF_COLOR[p.difficulty]};margin-bottom:8px">${p.difficulty}</span>`;
@@ -907,6 +917,9 @@ function openSheet(day){
   if(ci[day])html+=`<button class="check-btn" data-status="clear" style="justify-content:flex-start;padding:13px 16px">✕ Clear this day</button>`;
   html+=`</div>`;
   sheet.innerHTML=html;
+  const prevBtn=document.getElementById("sheetPrevBtn"),nextBtn=document.getElementById("sheetNextBtn");
+  if(prevBtn)prevBtn.onclick=()=>openSheet(day-1);
+  if(nextBtn)nextBtn.onclick=()=>openSheet(day+1);
   const hintBtn=document.getElementById("sheetHintBtn");
   if(hintBtn)hintBtn.onclick=()=>{hints[day]=true;save();openSheet(day)};
   sheet.querySelectorAll("[data-status]").forEach(b=>{
@@ -926,6 +939,12 @@ function openSheet(day){
 }
 function closeSheet(){document.getElementById("overlay").style.display="none";editDay=null}
 document.getElementById("overlay").onclick=e=>{if(e.target.id==="overlay")closeSheet()};
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("overlay").style.display!=="flex"||editDay===null)return;
+  if(e.key==="ArrowLeft"&&editDay>1)openSheet(editDay-1);
+  else if(e.key==="ArrowRight"&&editDay<TOTAL)openSheet(editDay+1);
+  else if(e.key==="Escape")closeSheet();
+});
 
 // toast
 let toastTimer;
