@@ -69,6 +69,10 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
 .share-li-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;padding:12px;border-radius:10px;border:1.5px solid #0A66C2;background:rgba(10,102,194,.08);color:#0A66C2;font:600 13.5px/1 'Inter';cursor:pointer;transition:transform 150ms cubic-bezier(.34,1.56,.64,1),background 200ms}
 .share-li-btn:active{transform:scale(.97);background:rgba(10,102,194,.16)}
+.share-textarea{width:100%;min-height:220px;margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-inset);color:var(--text-primary);font:400 13px/1.55 'Inter';resize:vertical}
+.share-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.share-actions{display:flex;gap:8px;margin-top:14px}
+.share-actions button{flex:1}
 .stat{padding:14px 8px;text-align:center}
 .stat .n{font-size:22px;font-weight:700;color:var(--accent)}
 .stat.pro .n{color:var(--purple)}
@@ -267,6 +271,11 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 <!-- Edit sheet -->
 <div class="overlay" id="overlay" style="display:none">
   <div class="sheet" id="sheet"></div>
+</div>
+
+<!-- Share preview sheet -->
+<div class="overlay" id="shareOverlay" style="display:none">
+  <div class="sheet" id="shareSheet"></div>
 </div>
 
 <script>
@@ -942,26 +951,56 @@ document.getElementById("copyBtn").onclick=async()=>{
 };
 
 // share progress on LinkedIn
-document.getElementById("shareLinkedInBtn").onclick=async()=>{
+function buildShareText(){
   const s=shareStats;
   const trackLabel=TRACK_META[data.activeTrack].label;
-  const lines=[
-    `📈 DSA interview prep update — ${trackLabel}`,
+  const earned=ACHIEVEMENTS.filter(a=>a.check(s));
+  const badgeLine=earned.length
+    ? earned.map(a=>`${a.emoji} ${a.label}`).join("  ·  ")
+    : "None yet — today's the day to earn the first one 🌱";
+  return [
+    `📈 DSA interview prep — ${trackLabel}`,
     ``,
     `🔥 ${s.streak}-day streak`,
-    `✅ ${s.solved} problems solved (${s.practiced} attempted, ${s.pct}% through the 84-day plan)`,
-    `🏆 ${s.pro} solved without a hint`,
-    `Week ${s.week}/12`,
+    `✅ ${s.solved} problems solved · ${s.practiced} attempted (${s.pct}% through the 84-day plan)`,
+    `🧠 ${s.pro} solved with zero hints`,
+    `📍 Week ${s.week}/12`,
     ``,
-    `Tracking daily practice with a self-hosted tracker I built. #DSA #CodingInterview #100DaysOfCode`
+    `🏅 Badges earned: ${badgeLine}`,
+    ``,
+    `Building this daily habit with a self-hosted tracker I built myself. If you're grinding DSA too — drop your streak or day count in the comments 👇 let's keep each other accountable and see who's furthest along this week.`,
+    ``,
+    `#DSA #CodingInterview #100DaysOfCode #TechInterview #ConsistencyWins`
   ].join("\n");
+}
+
+function openShareSheet(){
+  const text=buildShareText();
   const shareUrl=location.href.split("#")[0].split("?")[0];
-  // LinkedIn's share dialog only accepts a URL param — it doesn't accept prefilled post text,
-  // so we copy a ready-to-paste summary to the clipboard and open the composer alongside it.
-  try{await navigator.clipboard.writeText(lines);toast("📋 Progress copied — paste it into your LinkedIn post!")}
-  catch(e){prompt("Copy this text to paste into LinkedIn:",lines)}
-  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,"_blank","noopener,noreferrer");
-};
+  const sheet=document.getElementById("shareSheet");
+  sheet.innerHTML=`
+    <div class="section-label">Preview your LinkedIn post</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:6px">LinkedIn's share window opens blank — it doesn't accept pre-filled post text. Copy this, then paste it in when the window opens.</div>
+    <textarea class="share-textarea" id="shareTextarea">${text.replace(/</g,"&lt;")}</textarea>
+    <div class="share-actions">
+      <button class="check-btn" id="shareCopyBtn">📋 Copy text</button>
+      <button class="primary-btn" id="shareOpenBtn" style="flex:1">Open LinkedIn ▸</button>
+    </div>`;
+  document.getElementById("shareOverlay").style.display="flex";
+  document.getElementById("shareCopyBtn").onclick=async()=>{
+    const val=document.getElementById("shareTextarea").value;
+    try{await navigator.clipboard.writeText(val);toast("📋 Copied — paste it into the post!")}
+    catch(e){prompt("Copy this text:",val)}
+  };
+  document.getElementById("shareOpenBtn").onclick=async()=>{
+    const val=document.getElementById("shareTextarea").value;
+    try{await navigator.clipboard.writeText(val)}catch(e){}
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,"_blank","noopener,noreferrer");
+    toast("📋 Copied — paste it into the post that just opened!");
+  };
+}
+document.getElementById("shareLinkedInBtn").onclick=openShareSheet;
+document.getElementById("shareOverlay").onclick=e=>{if(e.target.id==="shareOverlay")e.target.style.display="none"};
 
 // notifications + daily reminder
 const reminderCard=document.getElementById("reminderCard");
