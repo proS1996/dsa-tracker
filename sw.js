@@ -1,4 +1,4 @@
-const CACHE = "dsa-tracker-v11";
+const CACHE = "dsa-tracker-v12";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./apple-touch-icon.png", "./apple-touch-icon-152.png", "./apple-touch-icon-167.png"];
 

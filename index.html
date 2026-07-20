@@ -38,6 +38,20 @@ h1{margin:10px 0 0;font-size:28px;font-weight:700;letter-spacing:-.01em;color:va
 .streak{display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px}
 .track-row{display:flex;align-items:center;gap:8px;margin-top:14px}
 .track-select{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-primary);font:600 13px/1 'Inter';-webkit-appearance:none;appearance:none}
+.company-row{display:flex;gap:8px;margin-bottom:14px}
+.company-blurb{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:14px}
+.round-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.round-item{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.round-item .rname{font-weight:600;font-size:13px;color:var(--text-primary);display:flex;justify-content:space-between;gap:8px}
+.round-item .rdur{font-weight:400;color:var(--text-faint);font-size:11px;white-space:nowrap}
+.round-item .rfocus{font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.45}
+.company-sub{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px}
+.mapped-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.mapped-tag{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--text-muted)}
+.resource-list{display:flex;flex-direction:column;gap:8px}
+.resource-item{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none;display:block}
+.resource-item .resname{font-weight:600;font-size:13px;color:var(--accent)}
+.resource-item .reswhy{font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.4}
 .track-note{font-size:11px;color:var(--text-faint);margin-top:6px;line-height:1.5}
 main{padding:16px 20px 0;max-width:480px;margin:0 auto}
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px}
@@ -253,6 +267,21 @@ main{padding:16px 20px 0;max-width:480px;margin:0 auto}
       <span>Plan progress</span><span class="mono" id="pct" style="color:var(--accent)">0%</span>
     </div>
     <div class="pbar-wrap"><div class="pbar" id="pbar" style="width:0%"></div></div>
+  </section>
+
+  <!-- Company Prep -->
+  <section class="card company-card" style="margin-top:20px">
+    <div class="section-label" style="margin-bottom:10px">🎯 Company Prep <span style="font-weight:400;text-transform:none;letter-spacing:0">· target a specific interview</span></div>
+    <div class="company-row">
+      <select class="track-select mono" id="companySelect"></select>
+      <select class="track-select mono" id="yoeSelect">
+        <option value="0-2">0-2 YOE</option>
+        <option value="2-4">2-4 YOE</option>
+        <option value="4-6">4-6 YOE</option>
+        <option value="6+">6+ YOE</option>
+      </select>
+    </div>
+    <div id="companyPanel"></div>
   </section>
 
   <!-- Heatmap -->
@@ -579,6 +608,7 @@ function buildProblems(raw){
   });
 }
 const PROBLEMS_BY_TRACK={"2024":buildProblems(TRACKS_RAW["2024"]),"2025":buildProblems(TRACKS_RAW["2025"]),"2026":buildProblems(TRACKS_RAW["2026"])};
+const COMPANIES={"atlassian":{"name":"Atlassian","blurb":"Vanilla-JS-heavy loop. Little to no React expected in the coding rounds; system design and 'craft' rounds carry real weight from mid-level up.","rounds":{"0-2":[{"title":"Recruiter/HM screen","dur":"30m","focus":"Background, motivation, basic JS fundamentals"},{"title":"Browser coding","dur":"60m","focus":"Build a small interactive UI in vanilla JS/HTML/CSS (e.g. live timer, dynamic form)"},{"title":"JS coding","dur":"60m","focus":"2 timed vanilla-JS problems \u2014 correctness, edge cases, clean code over cleverness"}],"2-4":[{"title":"Browser coding","dur":"60m","focus":"Interactive UI build, vanilla JS \u2014 DOM, events, state without a framework"},{"title":"JS coding","dur":"60m","focus":"Algorithmic JS problems, rapid-fire fundamentals in the first 10 minutes"},{"title":"Values/culture","dur":"45m","focus":"Atlassian's 5 values \u2014 teamwork, openness, 'don't #@!% the customer'"}],"4-6":[{"title":"Browser coding","dur":"60m","focus":"Same format, higher bar on edge cases and code quality under time pressure"},{"title":"JS coding","dur":"60m","focus":"Vanilla JS problem-solving with debugging follow-ups"},{"title":"System design","dur":"60m","focus":"Open-ended FE system design \u2014 e.g. notification system, collaborative editor"},{"title":"Leadership/craft","dur":"60m","focus":"Past projects, technical decisions, how you drove quality or mentored"}],"6+":[{"title":"System design","dur":"60m","focus":"Deeper FE architecture \u2014 scalability, state, cross-team constraints"},{"title":"JS/Browser coding","dur":"60m","focus":"Often lighter weight at this level, still expected to be sharp"},{"title":"Leadership craft","dur":"60m","focus":"Setting technical direction, org-level influence, raising engineering bar"},{"title":"Values round","dur":"45m","focus":"Same 5-values assessment, higher expectation of concrete stories"}]},"mappedTracks":["Arrays & Strings (Wk1-2)","Trees & Recursion (Wk5-6)","System Design basics (Wk11-12)"],"resources":[{"name":"GreatFrontEnd \u2014 Atlassian FE Guide","url":"https://www.greatfrontend.com/interviews/company/atlassian/questions-guides","why":"Company-specific FE question bank + RADIO system design framework"},{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"Pattern-based DSA revision, works well for the JS coding round"},{"name":"takeUforward / Striver (YouTube)","url":"https://www.youtube.com/@takeUforward","why":"Structured SDE sheet if you need to rebuild fundamentals fast"}]},"google":{"name":"Google","blurb":"DSA-heavy even for frontend roles. Evaluated across 4 dimensions: coding ability, role knowledge, leadership, and 'Googleyness' (culture fit) \u2014 every round feeds all four.","rounds":{"0-2":[{"title":"Phone screen","dur":"45m","focus":"1 DSA problem, algorithms + data structures fundamentals"},{"title":"Onsite coding x2","dur":"45m each","focus":"DSA problems, idiomatic JS, complexity analysis"},{"title":"Googleyness/behavioral","dur":"45m","focus":"Comfort with ambiguity, collaboration, bias to action"}],"2-4":[{"title":"Phone screen","dur":"45m","focus":"DSA problem, live coding in a shared doc"},{"title":"Onsite coding x2","dur":"45m each","focus":"DSA + 1 frontend-flavored round (implement a UI widget, e.g. color picker)"},{"title":"Googleyness/behavioral","dur":"45m","focus":"Project stories: performance fixes, accessibility, production debugging"}],"4-6":[{"title":"Onsite coding x2","dur":"45m each","focus":"DSA, higher bar on optimal solutions and clean edge-case handling"},{"title":"Frontend round","dur":"45m","focus":"Build a UI component live \u2014 state, accessibility, browser quirks"},{"title":"System design","dur":"45m","focus":"Begins mattering from L5 \u2014 FE or general system design"},{"title":"Googleyness/leadership","dur":"45m","focus":"Cross-functional influence, ambiguity, technical leadership stories"}],"6+":[{"title":"System design","dur":"45m","focus":"Heavier weight \u2014 architecture, scale, cross-team tradeoffs"},{"title":"Onsite coding","dur":"45m","focus":"Fewer pure-DSA rounds, more code comprehension / real-world code reasoning"},{"title":"Leadership","dur":"45m","focus":"Org-level impact, mentorship, driving technical direction"},{"title":"Googleyness","dur":"45m","focus":"Same culture bar, higher expectation of scope"}]},"mappedTracks":["Arrays & Strings (Wk1-2)","Dynamic Programming (Wk11-12)","Trees & Graphs (Wk5-8)"],"resources":[{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"NeetCode 150 pattern set matches Google's DSA-heavy bar closely"},{"name":"GreatFrontEnd \u2014 Google FE Guide","url":"https://www.greatfrontend.com/interviews/company/google/questions-guides","why":"Official-guide breakdown + frontend-specific question bank"},{"name":"ByteByteGo (YouTube)","url":"https://www.youtube.com/@ByteByteGo","why":"Best visual explanations for the system design round at L5+"}]},"amazon":{"name":"Amazon","blurb":"Leadership Principles (LPs) are graded in every single round, technical or not \u2014 as important as the code itself.","rounds":{"0-2":[{"title":"Online assessment","dur":"90m","focus":"2 DSA problems + work-style survey"},{"title":"Phone screen","dur":"60m","focus":"1 DSA problem + LP behavioral questions woven in"},{"title":"Onsite loop x3-4","dur":"45-60m each","focus":"DSA + at least one FE-specific round + heavy LP questioning throughout"}],"2-4":[{"title":"Online assessment","dur":"90m","focus":"2 DSA problems, moderate-hard"},{"title":"Onsite loop x4","dur":"60m each","focus":"DSA, FE coding (build a component), LP stories every round"}],"4-6":[{"title":"Onsite loop x4-5","dur":"60m each","focus":"DSA + FE system design + LP deep-dives on ownership and scope"},{"title":"Bar Raiser","dur":"60m","focus":"Cross-functional interviewer focused purely on LPs and culture bar"}],"6+":[{"title":"System design","dur":"60m","focus":"FE architecture at scale \u2014 multi-team, performance, reliability"},{"title":"Onsite loop x4","dur":"60-90m each","focus":"Lighter DSA, heavier LP + design + org-impact stories"},{"title":"Bar Raiser","dur":"60m","focus":"Same role, higher bar on 'Think Big' and 'Deliver Results'"}]},"mappedTracks":["Arrays & Strings (Wk1-2)","Hashing (Wk3-4)","Graphs (Wk7-8)"],"resources":[{"name":"takeUforward / Striver (YouTube)","url":"https://www.youtube.com/@takeUforward","why":"SDE sheet is the most common free prep path for Amazon's DSA bar"},{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"Fast pattern revision under time pressure"},{"name":"Success in Tech (YouTube)","url":"https://www.youtube.com/@SuccessinTech","why":"Covers LP-style behavioral prep alongside technical strategy"}]},"microsoft":{"name":"Microsoft","blurb":"Balanced loop \u2014 DSA, a design round, and a strong 'growth mindset' culture-fit round baked into the process.","rounds":{"0-2":[{"title":"Phone screen","dur":"45m","focus":"1 DSA problem, JS fundamentals"},{"title":"Onsite x3","dur":"45m each","focus":"2 DSA rounds + 1 FE coding/UI build"}],"2-4":[{"title":"Onsite x4","dur":"45-60m each","focus":"DSA + FE coding + light system design + culture/growth-mindset round"}],"4-6":[{"title":"Onsite x4","dur":"60m each","focus":"DSA + FE system design + culture round"},{"title":"As Appropriate (AA) round","dur":"45m","focus":"Senior hiring-manager round assessing overall fit and scope"}],"6+":[{"title":"System design","dur":"60m","focus":"Heavier architecture focus"},{"title":"Onsite x3-4","dur":"60m each","focus":"Fewer DSA rounds, more design + leadership/culture"},{"title":"AA round","dur":"45m","focus":"Director/senior-manager round, scope and org-impact focused"}]},"mappedTracks":["Arrays & Strings (Wk1-2)","Trees (Wk5-6)","System Design basics (Wk11-12)"],"resources":[{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"Structured DSA prep that covers Microsoft's common patterns"},{"name":"GreatFrontEnd \u2014 Microsoft FE Guide","url":"https://www.greatfrontend.com/interviews/company/microsoft/questions-guides","why":"FE-specific question bank and prep notes"}]},"meta":{"name":"Meta","blurb":"Fast, DSA + system design focused loop with a distinct behavioral round on 'Meta values' (move fast, be direct, build social value).","rounds":{"0-2":[{"title":"Phone screen","dur":"45m","focus":"1-2 DSA problems"},{"title":"Onsite coding x2","dur":"45m each","focus":"DSA, optimal solutions expected"},{"title":"Behavioral","dur":"45m","focus":"Meta values \u2014 direct communication, ownership, impact"}],"2-4":[{"title":"Onsite coding x2","dur":"45m each","focus":"DSA + 1 FE-flavored round (build a component)"},{"title":"System design","dur":"45m","focus":"Lightweight FE system design"},{"title":"Behavioral","dur":"45m","focus":"Values fit + project impact stories"}],"4-6":[{"title":"Onsite coding x2","dur":"45m each","focus":"DSA, higher bar"},{"title":"FE system design","dur":"45m","focus":"Deeper \u2014 state management, performance, architecture tradeoffs"},{"title":"Behavioral","dur":"45m","focus":"Leadership through influence, cross-team stories"}],"6+":[{"title":"System design","dur":"45m","focus":"Heavy weight \u2014 scale, cross-org architecture"},{"title":"Coding","dur":"45m","focus":"Often just one round, still expected to be sharp"},{"title":"Behavioral (leadership)","dur":"45m","focus":"Org-level scope, driving direction without formal authority"}]},"mappedTracks":["Arrays & Strings (Wk1-2)","Graphs (Wk7-8)","System Design basics (Wk11-12)"],"resources":[{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"Combined DSA + system design prep path, matches Meta's loop shape"},{"name":"Jordan Has No Life (YouTube)","url":"https://www.youtube.com/@JordanHasNoLife","why":"Deep system-design walkthroughs, useful once you're past 4+ YOE"}]},"uber":{"name":"Uber","blurb":"System-design-forward loop even for mid-level FE roles; DSA rounds tend to be more practical than pure LeetCode-style.","rounds":{"0-2":[{"title":"Phone screen","dur":"45m","focus":"1 DSA / practical coding problem"},{"title":"Onsite x3","dur":"45-60m each","focus":"DSA + FE coding + hiring-manager round"}],"2-4":[{"title":"Onsite x4","dur":"45-60m each","focus":"DSA + FE coding build + light system design + culture round"}],"4-6":[{"title":"Onsite x4","dur":"60m each","focus":"DSA + FE system design (real-time features, maps-style data) + culture round"}],"6+":[{"title":"System design","dur":"60m","focus":"Heavy \u2014 real-time systems, scale, reliability tradeoffs"},{"title":"Coding","dur":"45m","focus":"Practical, less algorithm-puzzle style"},{"title":"Leadership/culture","dur":"45m","focus":"Org impact and driving direction"}]},"mappedTracks":["Graphs (Wk7-8)","System Design basics (Wk11-12)","Dynamic Programming (Wk9-10)"],"resources":[{"name":"CodeKarle (YouTube)","url":"https://www.youtube.com/@codeKarle","why":"Ex-FAANG engineer covering real interview-scenario system design"},{"name":"NeetCode (YouTube)","url":"https://www.youtube.com/@NeetCode","why":"DSA fundamentals for the practical coding rounds"}]}};
 const TRACK_IDS=["2024","2025","2026"];
 
 const DIFF_COLOR={Easy:"var(--accent)",Medium:"var(--amber)",Hard:"var(--red)","—":"var(--text-faint)"};
@@ -611,6 +641,7 @@ if(!data.lastReminderNotifDate)data.lastReminderNotifDate=null;
 if(!data.lastUrgentNotifDate)data.lastUrgentNotifDate=null;
 if(data.challengeTarget===undefined)data.challengeTarget=null;
 if(data.challengeStartDay===undefined)data.challengeStartDay=null;
+if(!data.companyPrep)data.companyPrep={companyId:"atlassian",yoe:"2-4"};
 Object.keys(data.tracks).forEach(id=>{if(!data.tracks[id].lastRecapWeek)data.tracks[id].lastRecapWeek=0});
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast("⚠️ Couldn't save")}}
@@ -668,6 +699,50 @@ function renderTrackSelect(){
   });
   sel.onchange=()=>{data.activeTrack=sel.value;save();render();toast(`Switched to ${TRACK_META[sel.value].label}`)};
   document.getElementById("trackNote").textContent=TRACK_META[data.activeTrack].note;
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+function renderCompanySelect(){
+  const sel=document.getElementById("companySelect");
+  sel.innerHTML="";
+  Object.keys(COMPANIES).forEach(id=>{
+    const opt=document.createElement("option");
+    opt.value=id;opt.textContent=COMPANIES[id].name;
+    if(id===data.companyPrep.companyId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.onchange=()=>{data.companyPrep.companyId=sel.value;save();renderCompanyPanel()};
+
+  const yoeSel=document.getElementById("yoeSelect");
+  yoeSel.value=data.companyPrep.yoe;
+  yoeSel.onchange=()=>{data.companyPrep.yoe=yoeSel.value;save();renderCompanyPanel()};
+
+  renderCompanyPanel();
+}
+
+function renderCompanyPanel(){
+  const c=COMPANIES[data.companyPrep.companyId];
+  const rounds=c.rounds[data.companyPrep.yoe]||[];
+  let html=`<div class="company-blurb">${esc(c.blurb)}</div>`;
+
+  html+=`<div class="company-sub">Typical rounds at this level</div><div class="round-list">`;
+  rounds.forEach(r=>{
+    html+=`<div class="round-item"><div class="rname"><span>${esc(r.title)}</span><span class="rdur">${esc(r.dur)}</span></div><div class="rfocus">${esc(r.focus)}</div></div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="company-sub">Prep with these tracker weeks</div><div class="mapped-tags">`;
+  c.mappedTracks.forEach(t=>{html+=`<span class="mapped-tag">${esc(t)}</span>`});
+  html+=`</div>`;
+
+  html+=`<div class="company-sub">Recommended channels</div><div class="resource-list">`;
+  c.resources.forEach(r=>{
+    html+=`<a class="resource-item" href="${esc(r.url)}" target="_blank" rel="noopener"><div class="resname">${esc(r.name)} ↗</div><div class="reswhy">${esc(r.why)}</div></a>`;
+  });
+  html+=`</div>`;
+
+  document.getElementById("companyPanel").innerHTML=html;
 }
 
 function proCount(){
@@ -779,6 +854,7 @@ function updateHeroSadCards(day,streak,practiced){
 
 function render(){
   renderTrackSelect();
+  renderCompanySelect();
   const day=currentDayNum(),t=curTrack(),ci=t.checkins,hints=t.hints,problems=curProblems(),p=problems[day-1];
   document.getElementById("dayNum").innerHTML=`Day ${day}<span class="day-total"> /84</span>`;
   document.getElementById("weekTopic").textContent=`Week ${p.week+1} · ${p.weekTopic}`;
